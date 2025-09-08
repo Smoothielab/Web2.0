@@ -17,8 +17,8 @@ img.qr-code { position:fixed; bottom:30px; left:30px; width:120px; height:auto; 
 <body>
 
 <video id="bg-video" autoplay muted loop playsinline>
-<source src="smoothie-lab-video.mp4" type="video/mp4" />
-Tu navegador no soporta video HTML5.
+  <source src="smoothie-lab-video.mp4" type="video/mp4" />
+  Tu navegador no soporta video HTML5.
 </video>
 
 <iframe id="jotform-frame" src="https://near.tl/sm/AMcmY3jS_"></iframe>
@@ -33,7 +33,6 @@ const orderButton = document.getElementById('order-button');
 const qrCode = document.getElementById('qr-code');
 
 let inactivityTimer;
-let thankYouTimer;
 let isFormVisible = false;
 
 // --- Abrir formulario ---
@@ -42,7 +41,6 @@ function openForm() {
     orderButton.style.display = 'none';
     qrCode.style.display = 'none';
     isFormVisible = true;
-
     startInactivityTimer();
 }
 
@@ -54,13 +52,12 @@ function closeFormAndReset() {
     isFormVisible = false;
 
     clearTimeout(inactivityTimer);
-    clearTimeout(thankYouTimer);
 
     // Reinicia el formulario para el próximo usuario
     jotformFrame.src = jotformFrame.src;
 }
 
-// --- Inactividad: 90s ---
+// --- Inactividad: 180s ---
 function startInactivityTimer() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(() => {
@@ -68,26 +65,15 @@ function startInactivityTimer() {
     }, 180000); // 180 segundos
 }
 
-// --- Escuchar cuando cambia el iframe ---
-jotformFrame.addEventListener('load', () => {
-    // Cada vez que carga el iframe, chequeamos si es la página de "thank you"
-    if (jotformFrame.src.includes("thankyou")) {
-        clearTimeout(inactivityTimer);
-        thankYouTimer = setTimeout(() => {
-            closeFormAndReset();
-        }, 10000); // Espera 10 segundos en la thank you page
-    }
-});
-
-// --- Botón ---
-orderButton.addEventListener('click', openForm);
-
 // --- Resetear inactividad con interacciones ---
 ['mousemove','keydown','scroll','touchstart','click'].forEach(evt => {
     window.addEventListener(evt, () => {
         if (isFormVisible) startInactivityTimer();
     });
 });
+
+// --- Botón ---
+orderButton.addEventListener('click', openForm);
 </script>
 
 </body>
