@@ -20,8 +20,8 @@ button.order-button:hover { transform:scale(1.05); }
   Tu navegador no soporta video HTML5.
 </video>
 
-<!-- PDF integrado con tu usuario, repositorio y nombre de archivo -->
-<iframe id="pdf-frame" src="https://raw.githubusercontent.com/Smoothielab/Web2.0/main/MENU2026.pdf"></iframe>
+<!-- Iframe con visor integrado para que cargue el PDF solo al hacer clic -->
+<iframe id="pdf-frame" src=""></iframe>
 
 <button class="order-button" id="order-button">Ver Menu</button>
 
@@ -32,8 +32,16 @@ const orderButton = document.getElementById('order-button');
 let inactivityTimer;
 let isFormVisible = false;
 
+// URL de tu PDF en GitHub en formato RAW
+const pdfUrl = "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/MENU2026.pdf";
+
 // --- Abrir PDF ---
 function openForm() {
+    // Asignamos la ruta del PDF al visor de Mozilla solo al hacer clic
+    if (!pdfFrame.src || pdfFrame.src === window.location.href) {
+        pdfFrame.src = "https://mozilla.github.io/pdf.js/web/viewer.html?file=" + encodeURIComponent(pdfUrl);
+    }
+    
     pdfFrame.style.display = 'block';
     orderButton.style.display = 'none';
     isFormVisible = true;
@@ -48,8 +56,8 @@ function closeFormAndReset() {
 
     clearTimeout(inactivityTimer);
 
-    // Reinicia el visor del PDF para el próximo usuario
-    pdfFrame.src = pdfFrame.src;
+    // Limpia el visor para que el video de fondo siga reproduciéndose libremente
+    pdfFrame.src = '';
 }
 
 // --- Inactividad: 240s ---
