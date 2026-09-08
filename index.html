@@ -2,12 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<!-- Optimizaciones para evitar zoom y gestionar mejor el tacto en webOS -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>Smoothie Lab - Menú</title>
 
 <style>
-/* Forzar pantalla completa real y evitar barras de desplazamiento */
 html, body { 
     margin:0; 
     padding:0; 
@@ -16,17 +14,24 @@ html, body {
     overflow:hidden; 
     background:black; 
     font-family: sans-serif; 
-    overscroll-behavior: none; /* Evita efectos de rebote */
+    overscroll-behavior: none;
+}
+
+/* Contenedor del video para poder destruirlo y crearlo */
+#video-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background: black;
 }
 
 video#bg-video { 
-    position:absolute; 
-    top:0; 
-    left:0; 
     width:100%; 
     height:100%; 
     object-fit:cover; 
-    z-index:0; 
 }
 
 /* Capa del menú (oculta inicialmente) */
@@ -36,56 +41,48 @@ video#bg-video {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.98); /* Fondo casi negro sólido para mejor lectura */
+    background: rgba(0,0,0,0.98);
     z-index: 10;
-    display: none; /* MUY IMPORTANTE: Oculto por defecto */
+    display: none;
     flex-direction: column;
-    /* Habilitar scroll nativo suave */
     overflow-y: auto; 
     -webkit-overflow-scrolling: touch;
-    /* Padding inferior para que el contenido no se corte bajo el botón */
     padding-bottom: 140px; 
 }
 
-/* Estilo para las imágenes del menú */
 .menu-img {
     display: block;
-    margin: 30px auto 10px auto; /* Margen superior, centrado, margen inferior entre imágenes */
-    max-width: 92%; /* Un poco más de margen a los lados para que se vea que es desplazable */
-    height: auto; /* Mantiene proporción */
+    margin: 30px auto 10px auto;
+    max-width: 92%; 
+    height: auto; 
     border-radius: 12px;
-    /* Sutil sombra para separar la imagen del fondo oscuro */
     box-shadow: 0 0 20px rgba(255,255,255,0.15);
-    /* Mejora de renderizado para evitar dientes de sierra al escalar */
     image-rendering: -webkit-optimize-contrast;
 }
 
-/* Botón flotante para CERRAR MANEUALMENTE */
 #close-button {
     position: fixed;
     bottom: 40px;
     left: 50%;
-    transform: translateX(-50%); /* Centrado horizontalmente perfecto */
-    padding: 25px 60px; /* Botón muy grande para facilitar el toque táctil */
+    transform: translateX(-50%);
+    padding: 25px 60px;
     font-size: 2.2rem;
     background: rgba(255,255,255,0.98);
     color: black;
     border: none;
     border-radius: 60px;
     cursor: pointer;
-    z-index: 11; /* Por encima de las imágenes */
+    z-index: 11;
     box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     font-weight: bold;
-    /* Feedback visual al tocar */
     transition: transform 0.15s, background-color 0.15s;
-    -webkit-tap-highlight-color: transparent; /* Quita el destello azul al tocar en webOS */
+    -webkit-tap-highlight-color: transparent;
 }
 #close-button:active { 
     transform: translateX(-50%) scale(0.97); 
     background: rgba(255,255,255,0.8);
 }
 
-/* Botón grande inicial para ABRIR */
 #open-button { 
     position:fixed; 
     bottom:50px; 
@@ -98,12 +95,12 @@ video#bg-video {
     color: black;
     font-weight: bold;
     cursor:pointer; 
-    /* Animación de llamada de atención *suave* para no sobrecargar el motor de la TV */
     animation:pulse-tle 2s infinite; 
     z-index:5; 
     box-shadow: 0 15px 40px rgba(0,0,0,0.6);
     transition: transform 0.15s;
     -webkit-tap-highlight-color: transparent;
+    display: none; /* Oculto hasta que el DOM esté listo */
 }
 #open-button:active { transform:scale(0.97); }
 
@@ -116,96 +113,93 @@ video#bg-video {
 </head>
 <body>
 
-<!-- Video de fondo -->
-<video id="bg-video" autoplay muted loop playsinline preload="auto">
-  <source src="smoothie-lab-video.mp4" type="video/mp4">
-</video>
+<!-- Contenedor donde vive el video -->
+<div id="video-container">
+    <!-- Usaremos JavaScript para insertar el video aquí -->
+</div>
 
-<!-- Capa del menú (Contiene las 2 imágenes) -->
+<!-- Capa del menú -->
 <div id="menu-overlay">
-    <!-- IMAGEN 1: REEMPLAZA CON TU LIGA DIRECTA RAW DE GITHUB -->
-    <img src="https://raw.githubusercontent.com/Smoothielab/Web2.0/main/menu_pagina1.jpg" alt="Menú Página 1" class="menu-img" id="img1">
-    
-    <!-- IMAGEN 2: REEMPLAZA CON TU LIGA DIRECTA RAW DE GITHUB -->
-    <img src="https://raw.githubusercontent.com/Smoothielab/Web2.0/main/menu_pagina2.jpg" alt="Menú Página 2" class="menu-img" id="img2">
-    
-    <!-- Botón de cierre manual -->
+    <img alt="Menú Página 1" class="menu-img" id="img1">
+    <img alt="Menú Página 2" class="menu-img" id="img2">
     <button id="close-button" onclick="closeMenuManual()">X Cerrar Menú</button>
 </div>
 
-<!-- Botón inicial para abrir -->
-<button id="open-button" style="display: none;">Cargando...</button>
+<!-- Botón inicial -->
+<button id="open-button">Ver Menu</button>
 
 <script>
 const openBtn = document.getElementById('open-button');
 const menuOverlay = document.getElementById('menu-overlay');
-const bgVideo = document.getElementById('bg-video');
+const videoContainer = document.getElementById('video-container');
 const img1 = document.getElementById('img1');
 const img2 = document.getElementById('img2');
 
-// Bandera para saber si las imágenes ya terminaron de cargar
+// Rutas a tus imágenes optimizadas en GitHub
+const urlImg1 = "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/menu_pagina1.jpg";
+const urlImg2 = "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/menu_pagina2.jpg";
+
 let imagesLoadedCount = 0;
 const totalImages = 2;
 
-// --- Función genérica para manejar la carga de imágenes ---
-function onImageLoad() {
-    imagesLoadedCount++;
-    // Solo mostramos el botón cuando ambas imágenes estén en la caché de la TV
+// --- Función para crear el video (Bucle inicial) ---
+function loadVideo() {
+    videoContainer.innerHTML = ''; // Limpia por si acaso
+    const video = document.createElement('video');
+    video.id = 'bg-video';
+    video.autoplay = true;
+    video.loop = true;
+    video.muted = true; // Obligatorio para autoplay en TVs
+    video.playsInline = true;
+    video.src = 'smoothie-lab-video.mp4'; // Asegúrate de que este archivo esté en la misma carpeta
+    videoContainer.appendChild(video);
+}
+
+// --- Precarga de imágenes (sin mostrarlas) ---
+function preloadImages() {
+    img1.onload = () => { imagesLoadedCount++; checkReady(); };
+    img1.src = urlImg1;
+    
+    img2.onload = () => { imagesLoadedCount++; checkReady(); };
+    img2.src = urlImg2;
+}
+
+// --- Habilitar botón cuando todo esté listo ---
+function checkReady() {
     if (imagesLoadedCount === totalImages) {
-        openBtn.innerText = "Ver Menu";
         openBtn.style.display = 'block';
-        console.log("Menú precargado correctamente.");
+        openBtn.innerText = "Ver Menu";
     }
 }
 
-// --- Función genérica para manejar errores de carga ---
-function onImageError(elementName) {
-    console.error("Error al precargar la imagen: " + elementName);
-    // Aunque falle una, intentamos mostrar el botón igual, aunque la imagen se vea rota
-    imagesLoadedCount++;
-    if (imagesLoadedCount === totalImages) {
-        openBtn.innerText = "Ver Menu";
-        openBtn.style.display = 'block';
-    }
-}
-
-// --- Iniciar precarga al cargar la página ---
+// --- INICIO: Cargar video y precargar imágenes ---
 window.addEventListener('load', () => {
-    // Asignamos los eventos de carga y error ANTES de asignar el src
-    img1.onload = onImageLoad;
-    img1.onerror = () => onImageError('Página 1');
-    // Forzamos la carga estableciendo el src
-    img1.src = "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/menu_pagina1.jpg";
-
-    img2.onload = onImageLoad;
-    img2.onerror = () => onImageError('Página 2');
-    img2.src = "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/menu_pagina2.jpg";
+    loadVideo(); // Ponemos el video a correr
+    preloadImages(); // Precargamos el menú en caché
 });
 
 
-// --- Abrir Menú (Instantáneo porque ya está precargado) ---
+// --- Abrir Menú: DESTRUYE EL VIDEO ---
 function openMenu() {
-    // Mostrar capa
+    // 1. Muestra el menú instantáneamente
     menuOverlay.style.display = 'flex';
-    // Ocultar botón abrir
     openBtn.style.display = 'none';
-    // Pausar video para liberar recursos de la GPU
-    bgVideo.pause();
-    // Asegurar que el scroll esté arriba
     menuOverlay.scrollTop = 0;
+    
+    // 2. ELIMINA EL VIDEO DEL NAVEGADOR. Esto libera toda la RAM y GPU de golpe.
+    videoContainer.innerHTML = ''; 
 }
 
-// --- Cerrar Menú Manualmente ---
+// --- Cerrar Menú: RECREA EL VIDEO ---
 function closeMenuManual() {
-    // Ocultar capa
+    // 1. Oculta el menú
     menuOverlay.style.display = 'none';
-    // Mostrar botón abrir
     openBtn.style.display = 'block';
-    // Reanudar video
-    bgVideo.play();
+    
+    // 2. VUELVE A INSERTAR EL VIDEO Y HACER AUTOPLAY.
+    loadVideo(); 
 }
 
-// Evento click/toque botón ABRIR
 openBtn.addEventListener('click', openMenu);
 
 </script>
