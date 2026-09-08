@@ -2,14 +2,64 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Smoothie Lab - Menú</title>
+
+<!-- Incluimos la biblioteca PDF.js desde un CDN confiable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+    // Configuramos el trabajador (worker) de PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
+
 <style>
 html, body { margin:0; padding:0; height:100%; overflow:hidden; background:black; font-family: sans-serif; }
 video#bg-video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0; }
 
-/* Botón grande optimizado para pantalla táctil de la StanbyME */
-button.order-button { 
+/* Capa del menú (oculta inicialmente) */
+#menu-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.95); /* Fondo casi negro semitransparente */
+    z-index: 10;
+    display: none;
+    flex-direction: column;
+    overflow-y: auto; /* Permite hacer scroll vertical */
+    -webkit-overflow-scrolling: touch; /* Scroll suave en iOS/webOS */
+    padding-bottom: 100px; /* Espacio para el botón flotante */
+}
+
+/* Estilo para cada canvas donde se dibuja el PDF */
+.pdf-canvas {
+    display: block;
+    margin: 20px auto; /* Centrado */
+    max-width: 95%; /* Un poco de margen a los lados */
+    height: auto;
+    box-shadow: 0 0 20px rgba(255,255,255,0.1);
+}
+
+/* Botón flotante para cerrar manualmente */
+#close-button {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    padding: 20px 40px;
+    font-size: 1.5rem;
+    background: rgba(255,255,255,0.9);
+    color: black;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    z-index: 11;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    display: none; /* Oculto hasta que carga el PDF */
+}
+
+/* Botón grande inicial para abrir */
+#open-button { 
     position:fixed; 
     bottom:40px; 
     right:40px; 
@@ -22,62 +72,144 @@ button.order-button {
     font-weight: bold;
     cursor:pointer; 
     animation:pulse 1.5s infinite; 
-    z-index:3; 
+    z-index:5; 
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    transition:transform 0.3s; 
 }
-button.order-button:active { transform:scale(0.95); }
 @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.06);} 100%{transform:scale(1);} }
 </style>
 </head>
 <body>
 
-<!-- Video de fondo corriendo en bucle fluido -->
+<!-- Video de fondo -->
 <video id="bg-video" autoplay muted loop playsinline>
   <source src="smoothie-lab-video.mp4" type="video/mp4" />
-  Tu navegador no soporta video HTML5.
 </video>
 
-<!-- Botón táctil para ver el menú -->
-<button class="order-button" id="order-button">Ver Menu</button>
+<!-- Capa del menú -->
+<div id="menu-overlay">
+    <!-- Aquí se insertarán las páginas del PDF -->
+    <div id="pdf-container"></div>
+    <button id="close-button" onclick="closeMenuAndReset()">Cerrar Menú</button>
+</div>
+
+<!-- Botón inicial -->
+<button id="open-button">Ver Menu</button>
 
 <script>
-const orderButton = document.getElementById('order-button');
+// --- CONFIGURACIÓN ---
+// Sustituye estas URLs por las LIGAS DIRECTAS RAW de tus PDFs en GitHub
+const pdfUrls = [
+    "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/MENU_Pagina1.pdf",
+    "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/MENU_Pagina2.pdf"
+];
+
+const openBtn = document.getElementById('open-button');
+const menuOverlay = document.getElementById('menu-overlay');
+const pdfContainer = document.getElementById('pdf-container');
+const closeBtn = document.getElementById('close-button');
+const bgVideo = document.getElementById('bg-video');
+
 let inactivityTimer;
+let isMenuOpen = false;
+let pdfRendered = false; // Bandera para saber si ya cargamos los PDFs
 
-// Enlace directo a tu PDF en GitHub
-const pdfUrl = "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/MENU2026.pdf";
-
-// --- Función al hacer click en la StanbyME ---
-function openMenu() {
-    // Abre el PDF en una pestaña nueva del navegador de webOS
-    window.open(pdfUrl, '_blank');
+// --- Función para renderizar el PDF usando PDF.js ---
+async function renderAllPdfs() {
+    if (pdfRendered) return; // Evita cargar dos veces si se abre y cierra rápido
     
-    // Inicia el temporizador de inactividad de 240 segundos (4 minutos)
+    pdfContainer.innerHTML = ''; // Limpia el contenedor previo
+    closeBtn.style.display = 'none'; // Oculta el botón de cerrar hasta que cargue
+
+    try {
+        for (const url of pdfUrls) {
+            const pdf = await pdfjsLib.getDocument(url).promise;
+            
+            // Renderizar cada página
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                
+                // Ajusta el 'scale' para definir la calidad/tamaño. 
+                // 2.0 es alta calidad, 1.5 es medio. Prueba qué funciona mejor en la TV.
+                const viewport = page.getViewport({ scale: 2.0 }); 
+                
+                const canvas = document.createElement('canvas');
+                canvas.className = 'pdf-canvas';
+                const context = canvas.getContext('2d');
+                
+                // Tamaños del canvas
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                // Añadir el canvas al contenedor
+                pdfContainer.appendChild(canvas);
+
+                // Renderizar la página PDF en el contexto del canvas
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                await page.render(renderContext).promise;
+            }
+        }
+        pdfRendered = true;
+        closeBtn.style.display = 'block'; // Muestra el botón de cerrar al terminar
+    } catch (error) {
+        console.error("Error cargando el PDF:", error);
+        pdfContainer.innerHTML = '<p style="color:white; text-align:center; padding: 50px;">Error al cargar el menú. Por favor, intente más tarde.</p>';
+        closeBtn.style.display = 'block';
+    }
+}
+
+// --- Abrir Menú ---
+function openMenu() {
+    isMenuOpen = true;
+    menuOverlay.style.display = 'flex';
+    openBtn.style.display = 'none';
+    bgVideo.pause();
+    
+    // Iniciar carga de PDFs
+    renderAllPdfs();
+    
+    // Iniciar temporizador de inactividad
     startInactivityTimer();
 }
 
-// --- Recargar la página para volver al video inicial tras la inactividad ---
+// --- Cerrar Menú ---
+function closeMenuAndReset() {
+    isMenuOpen = false;
+    menuOverlay.style.display = 'none';
+    openBtn.style.display = 'block';
+    bgVideo.play();
+    
+    clearTimeout(inactivityTimer);
+    
+    // Opcional: Si quieres que el PDF se recargue siempre que se abre, descomenta la línea siguiente:
+    // pdfRendered = false; 
+    // Esto asegura que se muestre siempre desde la página 1, pero consume más datos/tiempo.
+}
+
+// --- Inactividad de 240s (4 min) ---
 function startInactivityTimer() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(() => {
-        // Recarga la página por completo, lo que mata cualquier pestaña colgada 
-        // y devuelve la StanbyME al video reproduciéndose en bucle.
-        window.location.reload();
+        if (isMenuOpen) {
+            closeMenuAndReset();
+        }
     }, 240000); 
 }
 
-// --- Reiniciar el conteo si alguien toca la pantalla o interactúa ---
-['mousemove', 'touchstart', 'click', 'keydown'].forEach(evt => {
+// --- Reiniciar inactividad por toque ---
+['touchstart', 'mousemove', 'click', 'scroll'].forEach(evt => {
     window.addEventListener(evt, () => {
-        if (inactivityTimer) {
+        if (isMenuOpen) {
             startInactivityTimer();
         }
     });
 });
 
-// Evento táctil/click principal
-orderButton.addEventListener('click', openMenu);
+// Evento click/toque botón abrir
+openBtn.addEventListener('click', openMenu);
+
 </script>
 
 </body>
