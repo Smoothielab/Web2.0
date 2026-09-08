@@ -6,202 +6,482 @@
 <title>Smoothie Lab - Menú</title>
 
 <style>
+/* --- Reset Básico --- */
 html, body { 
-    margin:0; 
-    padding:0; 
-    height:100%; 
-    width: 100%;
-    overflow:hidden; 
-    background:black; 
-    font-family: sans-serif; 
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    overflow: hidden; background: #000; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
     overscroll-behavior: none;
 }
 
-/* Contenedor del video para poder destruirlo y crearlo */
+/* --- Video de Fondo --- */
 #video-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; z-index: 0;
     background: black;
 }
-
 video#bg-video { 
-    width:100%; 
-    height:100%; 
-    object-fit:cover; 
+    width: 100%; height: 100%; object-fit: cover; 
 }
 
-/* Capa del menú (oculta inicialmente) */
+/* --- Capa del Menú (HTML Nativo Fluido) --- */
 #menu-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.98);
-    z-index: 10;
-    display: none;
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #111; /* Fondo oscuro elegante acorde a Smoothie Lab */
+    z-index: 10; display: none;
     flex-direction: column;
     overflow-y: auto; 
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 140px; 
+    padding-bottom: 140px; box-sizing: border-box;
+    color: #fff;
 }
 
-.menu-img {
-    display: block;
-    margin: 30px auto 10px auto;
-    max-width: 92%; 
-    height: auto; 
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(255,255,255,0.15);
-    image-rendering: -webkit-optimize-contrast;
+/* --- Estilos del Contenido del Menú --- */
+.menu-container {
+    width: 100%;
+    max-width: 900px; 
+    margin: 0 auto;
+    padding: 40px 20px;
+    box-sizing: border-box;
 }
 
-#close-button {
-    position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 25px 60px;
-    font-size: 2.2rem;
-    background: rgba(255,255,255,0.98);
-    color: black;
-    border: none;
-    border-radius: 60px;
-    cursor: pointer;
-    z-index: 11;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+.brand-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+.brand-header h1 {
+    font-size: 2.8rem;
+    color: #fff;
+    margin: 0;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+.brand-header p {
+    color: #00ffcc;
+    font-size: 1.2rem;
+    margin-top: 5px;
+    letter-spacing: 1px;
+}
+
+.section-title {
+    font-size: 2rem;
+    color: #00ffcc;
+    margin-top: 50px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #00ffcc;
+    padding-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.subsection-title {
+    font-size: 1.5rem;
+    color: #ff99cc;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 12px;
+}
+
+.item-info {
+    flex-grow: 1;
+    padding-right: 20px;
+}
+
+.item-name {
+    font-size: 1.3rem;
     font-weight: bold;
-    transition: transform 0.15s, background-color 0.15s;
-    -webkit-tap-highlight-color: transparent;
+    color: #fff;
 }
-#close-button:active { 
-    transform: translateX(-50%) scale(0.97); 
-    background: rgba(255,255,255,0.8);
+
+.item-desc {
+    font-size: 0.95rem;
+    color: #aaa;
+    margin-top: 4px;
+    line-height: 1.4;
 }
+
+.item-price {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #00ffcc;
+    white-space: nowrap;
+}
+
+/* Extras y rejillas */
+.extras-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+@media (max-width: 600px) {
+    .extras-grid { grid-template-columns: 1fr; }
+}
+
+.extra-item {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.05);
+    padding: 12px 15px;
+    border-radius: 8px;
+    align-items: center;
+}
+.extra-name { font-size: 1.1rem; color: #fff; }
+.extra-price { font-size: 1.1rem; color: #00ffcc; font-weight: bold; }
+
+.note-box {
+    background: rgba(0,255,204,0.1);
+    border-left: 4px solid #00ffcc;
+    padding: 12px 15px;
+    margin: 20px 0;
+    font-size: 1rem;
+    color: #ddd;
+    border-radius: 0 8px 8px 0;
+}
+
+/* --- Botones --- */
+#close-button {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%);
+    padding: 20px 50px; font-size: 1.8rem;
+    background: #fff; color: #000;
+    border: none; border-radius: 50px; cursor: pointer;
+    z-index: 11; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    font-weight: bold; transition: transform 0.15s;
+}
+#close-button:active { transform: translateX(-50%) scale(0.97); }
 
 #open-button { 
-    position:fixed; 
-    bottom:50px; 
-    right:50px; 
-    padding:45px 80px; 
-    font-size:3.5rem; 
-    border:none; 
-    border-radius:30px; 
-    background-color:rgba(255,255,255,0.98); 
-    color: black;
-    font-weight: bold;
-    cursor:pointer; 
-    animation:pulse-tle 2s infinite; 
-    z-index:5; 
+    position: fixed; bottom: 40px; right: 40px;
+    padding: 35px 65px; font-size: 2.8rem;
+    border: none; border-radius: 25px;
+    background-color: rgba(255,255,255,0.95); color: black;
+    font-weight: bold; cursor: pointer;
+    animation: pulse-tle 2s infinite; z-index: 5;
     box-shadow: 0 15px 40px rgba(0,0,0,0.6);
-    transition: transform 0.15s;
-    -webkit-tap-highlight-color: transparent;
-    display: none; /* Oculto hasta que el DOM esté listo */
 }
-#open-button:active { transform:scale(0.97); }
-
-@keyframes pulse-tle { 
-    0% { box-shadow: 0 15px 40px rgba(0,0,0,0.6), scale(1); } 
-    50% { box-shadow: 0 15px 50px rgba(0,0,0,0.8), scale(1.03); } 
-    100% { box-shadow: 0 15px 40px rgba(0,0,0,0.6), scale(1); } 
-}
+@keyframes pulse-tle { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
 </style>
 </head>
 <body>
 
-<!-- Contenedor donde vive el video -->
+<!-- Contenedor del Video -->
 <div id="video-container">
-    <!-- Usaremos JavaScript para insertar el video aquí -->
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="smoothie-lab-video.mp4" type="video/mp4">
+    </video>
 </div>
 
-<!-- Capa del menú -->
+<!-- Capa del Menú -->
 <div id="menu-overlay">
-    <img alt="Menú Página 1" class="menu-img" id="img1">
-    <img alt="Menú Página 2" class="menu-img" id="img2">
+    <div class="menu-container">
+        
+        <div class="brand-header">
+            <h1>Smoothie Lab</h1>
+            <p>Lata 500 ml • Proteínas Vegetales</p>
+        </div>
+
+        <!-- SECCIÓN 1: SMOOTHIES SIGNATURE CON PROTEÍNA -->
+        <h2 class="section-title">Smoothies Signature con Proteína</h2>
+        
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Cacao Collagen</div>
+                <div class="item-desc">30g Plátano, nibs de cacao, proteína Habits cacao y colágeno.</div>
+            </div>
+            <div class="item-price">$145</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Vainilla Chip</div>
+                <div class="item-desc">30g Plátano, crema de cacahuate, nibs de cacao y proteína de vainilla Habits.</div>
+            </div>
+            <div class="item-price">$145</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Banana Hazelnut</div>
+                <div class="item-desc">30g Plátano, crema de cacahuate, Nucolato, nibs de cacao y proteína de vainilla.</div>
+            </div>
+            <div class="item-price">$145</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Protein Espresso</div>
+                <div class="item-desc">30g Doble shot de espresso y proteína de cacao Habits.</div>
+            </div>
+            <div class="item-price">$135</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Cacao Fuel</div>
+                <div class="item-desc">Proteína de cacao Habits y nibs de cacao.</div>
+            </div>
+            <div class="item-price">$135</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Midnight Blue</div>
+                <div class="item-desc">30g Piña, spirulina azul, granola, yogurt griego y proteína natural Birdman.</div>
+            </div>
+            <div class="item-price">$150</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Detox Fuel</div>
+                <div class="item-desc">30g Plátano, coco rallado, chía, carbón activado y proteína natural Birdman.</div>
+            </div>
+            <div class="item-price">$150</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Cinnamon Wave</div>
+                <div class="item-desc">30g Plátano, canela, kéfir, Cinnamon Toast y proteína de vainilla Habits.</div>
+            </div>
+            <div class="item-price">$150</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Tropical Green</div>
+                <div class="item-desc">30g Agua de coco, espinaca, limón y proteína de vainilla Habits.</div>
+            </div>
+            <div class="item-price">$135</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Velvet Carrot</div>
+                <div class="item-desc">15g Zanahoria, canela, nuez moscada y proteína de vainilla Habits.</div>
+            </div>
+            <div class="item-price">$135</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Strawberry Glaze</div>
+                <div class="item-desc">15g Fresa, plátano, dátil, yogurt griego sin azúcar y proteína de fresa Birdman.</div>
+            </div>
+            <div class="item-price">$145</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Tropical Glow</div>
+                <div class="item-desc">15g Piña, mango, coco rallado y proteína de vainilla Habits.</div>
+            </div>
+            <div class="item-price">$145</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Chai Vanilla Protein</div>
+                <div class="item-desc">15g Chai vainilla y proteína natural Birdman.</div>
+            </div>
+            <div class="item-price">$135</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Berry Cloud</div>
+                <div class="item-desc">15g Frutos rojos, proteína de fresa Birdman y yogurt griego sin azúcar.</div>
+            </div>
+            <div class="item-price">$145</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Berry Crunch</div>
+                <div class="item-desc">15g Frutos rojos, proteína de fresa Birdman y granola artesanal.</div>
+            </div>
+            <div class="item-price">$145</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Green Boost</div>
+                <div class="item-desc">15g Mango, espinaca, kale, aguacate y proteína de vainilla Habits.</div>
+            </div>
+            <div class="item-price">$155</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Strawberry Mango</div>
+                <div class="item-desc">15g Fresas, mango, yogurt griego y proteína de fresa Birdman.</div>
+            </div>
+            <div class="item-price">$145</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Strawberry Kefir</div>
+                <div class="item-desc">15g Fresas, kéfir natural, chía y proteína de fresa Birdman.</div>
+            </div>
+            <div class="item-price">$145</div>
+        </div>
+
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Coco Intense</div>
+                <div class="item-desc">15g Agua de coco, coco natural, coco rallado y proteína natural Birdman.</div>
+            </div>
+            <div class="item-price">$135</div>
+        </div>
+
+        <!-- SECCIÓN 2: SMOOTHIES SIGNATURE SIN PROTEÍNA -->
+        <h2 class="section-title">Smoothies Signature Sin Proteína</h2>
+        
+        <div class="item">
+            <div class="item-info"><div class="item-name">Matcha Classic</div><div class="item-desc">Matcha y leche de tu elección.</div></div>
+            <div class="item-price">$90</div>
+        </div>
+        <div class="item">
+            <div class="item-info"><div class="item-name">Matcha Strawberry</div><div class="item-desc">Matcha ceremonial y mermelada de fresa.</div></div>
+            <div class="item-price">$110</div>
+        </div>
+        <div class="item">
+            <div class="item-info"><div class="item-name">Terremoto Latte</div><div class="item-desc">Doble shot de espresso y leche de tu elección.</div></div>
+            <div class="item-price">$85</div>
+        </div>
+        <div class="item">
+            <div class="item-info"><div class="item-name">Pink Power Fuel</div><div class="item-desc">Plátano, fresa, betabel, cacao y coco rallado.</div></div>
+            <div class="item-price">$125</div>
+        </div>
+        <div class="item">
+            <div class="item-info"><div class="item-name">Golden Mango</div><div class="item-desc">Cúrcuma, jengibre, canela y mango.</div></div>
+            <div class="item-price">$125</div>
+        </div>
+        <div class="item">
+            <div class="item-info"><div class="item-name">Purple Mist</div><div class="item-desc">Frutos rojos, lavanda y yogurt griego.</div></div>
+            <div class="item-price">$125</div>
+        </div>
+
+        <!-- SECCIÓN 3: SMOOTHIES ESSENTIALS VASO U -->
+        <h2 class="section-title">Smoothies Essentials (Vaso U)</h2>
+        <div class="item">
+            <div class="item-info"><div class="item-name">Cinnamon Wave</div><div class="item-desc">Plátano, canela, kéfir natural y Cinnamon Toast.</div></div>
+            <div class="item-price">$125</div>
+        </div>
+        <div class="item">
+            <div class="item-info"><div class="item-name">Midnight Cacao</div><div class="item-desc">Cacao sin azúcar y nibs de cacao.</div></div>
+            <div class="item-price">$125</div>
+        </div>
+        <div class="item">
+            <div class="item-info"><div class="item-name">Matcha Zen</div><div class="item-desc">Matcha y granola artesanal.</div></div>
+            <div class="item-price">$120</div>
+        </div>
+        <div class="item">
+            <div class="item-info"><div class="item-name">Berry Glow</div><div class="item-desc">Berries, plátano, fresa y granola artesanal.</div></div>
+            <div class="item-price">$125</div>
+        </div>
+        <div class="item">
+            <div class="item-info"><div class="item-name">Coco Intense</div><div class="item-desc">Agua de coco, coco y coco rallado.</div></div>
+            <div class="item-price">$115</div>
+        </div>
+        <div class="item">
+            <div class="item-info"><div class="item-name">Arma tu Smoothie</div><div class="item-desc">Personalizado con o sin proteína.</div></div>
+            <div class="item-price">$125 / $145</div>
+        </div>
+
+        <!-- SECCIÓN 4: HELADOS -->
+        <h2 class="section-title">Helados Signature</h2>
+        <div class="item">
+            <div class="item-info">
+                <div class="item-name">Helado Base de Yogurt</div>
+                <div class="item-desc">Incluye 1 mermelada (fresa, chocolate, cajeta o miel maple) y 1 topping (galleta, brownie, nibs de cacao o Catalina Crunch).</div>
+            </div>
+            <div class="item-price">$125</div>
+        </div>
+        <div class="note-box">Extra topping: +$15</div>
+
+        <!-- SECCIÓN 5: HOT BAR / CAFÉ -->
+        <h2 class="section-title">Hot Bar - Café de Especialidad</h2>
+        <div class="item"><div class="item-info"><div class="item-name">Espresso</div><div class="item-desc">Café 100% arábica de origen nacional.</div></div><div class="item-price">$45</div></div>
+        <div class="item"><div class="item-info"><div class="item-name">Americano</div><div class="item-desc">Café 100% arábica de origen nacional.</div></div><div class="item-price">$40</div></div>
+        <div class="item"><div class="item-info"><div class="item-name">Cappuccino</div><div class="item-desc">Doble shot de espresso con fina capa de microespuma.</div></div><div class="item-price">$60</div></div>
+        <div class="item"><div class="item-info"><div class="item-name">Flat White</div><div class="item-desc">Doble shot de espresso con fina capa de microespuma.</div></div><div class="item-price">$55</div></div>
+        <div class="item"><div class="item-info"><div class="item-name">Extra Lavanda</div><div class="item-desc">Lavanda orgánica.</div></div><div class="item-price">$15</div></div>
+
+        <!-- SECCIÓN 6: COLD BAR & REFRESHERS -->
+        <h2 class="section-title">Cold Bar & Refreshers</h2>
+        <div class="subsection-title">Iced</div>
+        <div class="item"><div class="item-info"><div class="item-name">Iced Latte</div><div class="item-desc">Café fresco servido sobre hielo cristalino.</div></div><div class="item-price">$70</div></div>
+        <div class="item"><div class="item-info"><div class="item-name">Chai Vainilla</div></div><div class="item-price">$80</div></div>
+        <div class="item"><div class="item-info"><div class="item-name">Matcha</div><div class="item-desc">Matcha ceremonial y leche de tu elección.</div></div><div class="item-price">$80</div></div>
+
+        <div class="subsection-title">Refreshers (Agua mineral, pulpa natural y electrolitos)</div>
+        <div class="item"><div class="item-info"><div class="item-name">Refresher Mango</div></div><div class="item-price">$75</div></div>
+        <div class="item"><div class="item-info"><div class="item-name">Refresher Piña</div></div><div class="item-price">$75</div></div>
+        <div class="item"><div class="item-info"><div class="item-name">Refresher Jamaica</div></div><div class="item-price">$75</div></div>
+        
+        <div class="note-box">Leches disponibles: Almendra, avena, deslactosada, entera / agua de coco.</div>
+
+        <!-- SECCIÓN 7: EXTRAS -->
+        <h2 class="section-title">Extras</h2>
+        <div class="extras-grid">
+            <div class="extra-item"><span class="extra-name">Proteína Habits / Birdman (30g)</span><span class="extra-price">+$40</span></div>
+            <div class="extra-item"><span class="extra-name">Creatina Birdman (5g)</span><span class="extra-price">+$15</span></div>
+            <div class="extra-item"><span class="extra-name">Colágeno Hidrolizado (10g)</span><span class="extra-price">+$15</span></div>
+            <div class="extra-item"><span class="extra-name">Kéfir natural / Yogurt griego</span><span class="extra-price">+$15</span></div>
+            <div class="extra-item"><span class="extra-name">Adaptógeno Melena de León (3g)</span><span class="extra-price">+$15</span></div>
+            <div class="extra-item"><span class="extra-name">Adaptógeno Cordyceps (3g)</span><span class="extra-price">+$15</span></div>
+            <div class="extra-item"><span class="extra-name">Granola artesanal</span><span class="extra-price">+$15</span></div>
+            <div class="extra-item"><span class="extra-name">Nibs de cacao</span><span class="extra-price">+$10</span></div>
+            <div class="extra-item"><span class="extra-name">Chía</span><span class="extra-price">+$10</span></div>
+            <div class="extra-item"><span class="extra-name">Nucolato (crema avellana)</span><span class="extra-price">+$10</span></div>
+            <div class="extra-item"><span class="extra-name">Dátil</span><span class="extra-price">+$10</span></div>
+            <div class="extra-item"><span class="extra-name">Catalina Crunch</span><span class="extra-price">+$15</span></div>
+        </div>
+
+    </div>
+    
+    <!-- Botón de cierre -->
     <button id="close-button" onclick="closeMenuManual()">X Cerrar Menú</button>
 </div>
 
 <!-- Botón inicial -->
-<button id="open-button">Ver Menu</button>
+<button id="open-button" onclick="openMenu()">Ver Menu</button>
 
 <script>
 const openBtn = document.getElementById('open-button');
 const menuOverlay = document.getElementById('menu-overlay');
 const videoContainer = document.getElementById('video-container');
-const img1 = document.getElementById('img1');
-const img2 = document.getElementById('img2');
 
-// Rutas a tus imágenes optimizadas en GitHub
-const urlImg1 = "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/menu_pagina1.jpg";
-const urlImg2 = "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/menu_pagina2.jpg";
-
-let imagesLoadedCount = 0;
-const totalImages = 2;
-
-// --- Función para crear el video (Bucle inicial) ---
-function loadVideo() {
-    videoContainer.innerHTML = ''; // Limpia por si acaso
-    const video = document.createElement('video');
-    video.id = 'bg-video';
-    video.autoplay = true;
-    video.loop = true;
-    video.muted = true; // Obligatorio para autoplay en TVs
-    video.playsInline = true;
-    video.src = 'smoothie-lab-video.mp4'; // Asegúrate de que este archivo esté en la misma carpeta
-    videoContainer.appendChild(video);
-}
-
-// --- Precarga de imágenes (sin mostrarlas) ---
-function preloadImages() {
-    img1.onload = () => { imagesLoadedCount++; checkReady(); };
-    img1.src = urlImg1;
-    
-    img2.onload = () => { imagesLoadedCount++; checkReady(); };
-    img2.src = urlImg2;
-}
-
-// --- Habilitar botón cuando todo esté listo ---
-function checkReady() {
-    if (imagesLoadedCount === totalImages) {
-        openBtn.style.display = 'block';
-        openBtn.innerText = "Ver Menu";
-    }
-}
-
-// --- INICIO: Cargar video y precargar imágenes ---
-window.addEventListener('load', () => {
-    loadVideo(); // Ponemos el video a correr
-    preloadImages(); // Precargamos el menú en caché
-});
-
-
-// --- Abrir Menú: DESTRUYE EL VIDEO ---
 function openMenu() {
     // 1. Muestra el menú instantáneamente
     menuOverlay.style.display = 'flex';
     openBtn.style.display = 'none';
     menuOverlay.scrollTop = 0;
     
-    // 2. ELIMINA EL VIDEO DEL NAVEGADOR. Esto libera toda la RAM y GPU de golpe.
+    // 2. ELIMINA EL VIDEO para liberar memoria y evitar trabas en la TV.
     videoContainer.innerHTML = ''; 
 }
 
-// --- Cerrar Menú: RECREA EL VIDEO ---
 function closeMenuManual() {
     // 1. Oculta el menú
     menuOverlay.style.display = 'none';
     openBtn.style.display = 'block';
     
-    // 2. VUELVE A INSERTAR EL VIDEO Y HACER AUTOPLAY.
-    loadVideo(); 
+    // 2. RECREA EL VIDEO de fondo.
+    videoContainer.innerHTML = '<video id="bg-video" autoplay muted loop playsinline><source src="smoothie-lab-video.mp4" type="video/mp4"></video>'; 
 }
-
-openBtn.addEventListener('click', openMenu);
-
 </script>
 
 </body>
