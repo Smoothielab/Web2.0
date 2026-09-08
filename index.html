@@ -5,13 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Smoothie Lab - Menú</title>
 
-<!-- Incluimos la biblioteca PDF.js desde un CDN confiable -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>
-    // Configuramos el trabajador (worker) de PDF.js
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-</script>
-
 <style>
 html, body { margin:0; padding:0; height:100%; overflow:hidden; background:black; font-family: sans-serif; }
 video#bg-video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0; }
@@ -23,42 +16,45 @@ video#bg-video { position:absolute; top:0; left:0; width:100%; height:100%; obje
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.95); /* Fondo casi negro semitransparente */
+    background: rgba(0,0,0,0.95); /* Fondo oscuro */
     z-index: 10;
-    display: none;
+    display: none; /* Oculto por defecto */
     flex-direction: column;
-    overflow-y: auto; /* Permite hacer scroll vertical */
-    -webkit-overflow-scrolling: touch; /* Scroll suave en iOS/webOS */
-    padding-bottom: 100px; /* Espacio para el botón flotante */
+    overflow-y: auto; /* Permite hacer scroll vertical si el menú es largo */
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 120px; /* Espacio extra abajo para el botón flotante */
 }
 
-/* Estilo para cada canvas donde se dibuja el PDF */
-.pdf-canvas {
+/* Estilo para las imágenes del menú */
+.menu-img {
     display: block;
     margin: 20px auto; /* Centrado */
-    max-width: 95%; /* Un poco de margen a los lados */
-    height: auto;
-    box-shadow: 0 0 20px rgba(255,255,255,0.1);
+    max-width: 95%; /* Ocupa casi todo el ancho */
+    height: auto; /* Mantiene la proporción de la imagen */
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(255,255,255,0.2);
 }
 
-/* Botón flotante para cerrar manualmente */
+/* Botón flotante para CERRAR */
 #close-button {
     position: fixed;
     bottom: 30px;
     left: 30px;
-    padding: 20px 40px;
-    font-size: 1.5rem;
-    background: rgba(255,255,255,0.9);
+    padding: 25px 50px; /* Botón grande para fácil toque */
+    font-size: 2rem;
+    background: rgba(255,255,255,0.95);
     color: black;
     border: none;
     border-radius: 50px;
     cursor: pointer;
     z-index: 11;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    display: none; /* Oculto hasta que carga el PDF */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    font-weight: bold;
+    transition: transform 0.2s;
 }
+#close-button:active { transform: scale(0.95); }
 
-/* Botón grande inicial para abrir */
+/* Botón grande inicial para ABRIR */
 #open-button { 
     position:fixed; 
     bottom:40px; 
@@ -74,142 +70,64 @@ video#bg-video { position:absolute; top:0; left:0; width:100%; height:100%; obje
     animation:pulse 1.5s infinite; 
     z-index:5; 
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition: transform 0.2s;
 }
+#open-button:active { transform: scale(0.95); }
+
 @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.06);} 100%{transform:scale(1);} }
 </style>
 </head>
 <body>
 
-<!-- Video de fondo -->
+<!-- Video de fondo corriendo en bucle -->
 <video id="bg-video" autoplay muted loop playsinline>
   <source src="smoothie-lab-video.mp4" type="video/mp4" />
 </video>
 
-<!-- Capa del menú -->
+<!-- Capa del menú (Contiene las 2 imágenes) -->
 <div id="menu-overlay">
-    <!-- Aquí se insertarán las páginas del PDF -->
-    <div id="pdf-container"></div>
-    <button id="close-button" onclick="closeMenuAndReset()">Cerrar Menú</button>
+    <!-- REEMPLAZA CON TUS ENLACES REALES DE GITHUB -->
+    <img src="https://raw.githubusercontent.com/Smoothielab/Web2.0/main/menu_pagina1.jpg" alt="Menú Página 1" class="menu-img">
+    <img src="https://raw.githubusercontent.com/Smoothielab/Web2.0/main/menu_pagina2.jpg" alt="Menú Página 2" class="menu-img">
+    
+    <!-- Botón de cierre manual -->
+    <button id="close-button" onclick="closeMenuManual()">X Cerrar Menú</button>
 </div>
 
-<!-- Botón inicial -->
+<!-- Botón inicial para abrir -->
 <button id="open-button">Ver Menu</button>
 
 <script>
-// --- CONFIGURACIÓN ---
-// Sustituye estas URLs por las LIGAS DIRECTAS RAW de tus PDFs en GitHub
-const pdfUrls = [
-    "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/MENU_Pagina1.pdf",
-    "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/MENU_Pagina2.pdf"
-];
-
 const openBtn = document.getElementById('open-button');
 const menuOverlay = document.getElementById('menu-overlay');
-const pdfContainer = document.getElementById('pdf-container');
-const closeBtn = document.getElementById('close-button');
 const bgVideo = document.getElementById('bg-video');
-
-let inactivityTimer;
-let isMenuOpen = false;
-let pdfRendered = false; // Bandera para saber si ya cargamos los PDFs
-
-// --- Función para renderizar el PDF usando PDF.js ---
-async function renderAllPdfs() {
-    if (pdfRendered) return; // Evita cargar dos veces si se abre y cierra rápido
-    
-    pdfContainer.innerHTML = ''; // Limpia el contenedor previo
-    closeBtn.style.display = 'none'; // Oculta el botón de cerrar hasta que cargue
-
-    try {
-        for (const url of pdfUrls) {
-            const pdf = await pdfjsLib.getDocument(url).promise;
-            
-            // Renderizar cada página
-            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                const page = await pdf.getPage(pageNum);
-                
-                // Ajusta el 'scale' para definir la calidad/tamaño. 
-                // 2.0 es alta calidad, 1.5 es medio. Prueba qué funciona mejor en la TV.
-                const viewport = page.getViewport({ scale: 2.0 }); 
-                
-                const canvas = document.createElement('canvas');
-                canvas.className = 'pdf-canvas';
-                const context = canvas.getContext('2d');
-                
-                // Tamaños del canvas
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-
-                // Añadir el canvas al contenedor
-                pdfContainer.appendChild(canvas);
-
-                // Renderizar la página PDF en el contexto del canvas
-                const renderContext = {
-                    canvasContext: context,
-                    viewport: viewport
-                };
-                await page.render(renderContext).promise;
-            }
-        }
-        pdfRendered = true;
-        closeBtn.style.display = 'block'; // Muestra el botón de cerrar al terminar
-    } catch (error) {
-        console.error("Error cargando el PDF:", error);
-        pdfContainer.innerHTML = '<p style="color:white; text-align:center; padding: 50px;">Error al cargar el menú. Por favor, intente más tarde.</p>';
-        closeBtn.style.display = 'block';
-    }
-}
 
 // --- Abrir Menú ---
 function openMenu() {
-    isMenuOpen = true;
+    // Muestra la capa de imágenes
     menuOverlay.style.display = 'flex';
+    // Oculta el botón de abrir
     openBtn.style.display = 'none';
+    // Pausa el video para ahorrar recursos de la TV
     bgVideo.pause();
-    
-    // Iniciar carga de PDFs
-    renderAllPdfs();
-    
-    // Iniciar temporizador de inactividad
-    startInactivityTimer();
+    // Asegura que el menú empiece desde arriba
+    menuOverlay.scrollTop = 0;
 }
 
-// --- Cerrar Menú ---
-function closeMenuAndReset() {
-    isMenuOpen = false;
+// --- Cerrar Menú Manualmente ---
+function closeMenuManual() {
+    // Oculta la capa de imágenes
     menuOverlay.style.display = 'none';
+    // Vuelve a mostrar el botón de abrir
     openBtn.style.display = 'block';
+    // Reanuda el video en bucle
     bgVideo.play();
-    
-    clearTimeout(inactivityTimer);
-    
-    // Opcional: Si quieres que el PDF se recargue siempre que se abre, descomenta la línea siguiente:
-    // pdfRendered = false; 
-    // Esto asegura que se muestre siempre desde la página 1, pero consume más datos/tiempo.
 }
 
-// --- Inactividad de 240s (4 min) ---
-function startInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(() => {
-        if (isMenuOpen) {
-            closeMenuAndReset();
-        }
-    }, 240000); 
-}
-
-// --- Reiniciar inactividad por toque ---
-['touchstart', 'mousemove', 'click', 'scroll'].forEach(evt => {
-    window.addEventListener(evt, () => {
-        if (isMenuOpen) {
-            startInactivityTimer();
-        }
-    });
-});
-
-// Evento click/toque botón abrir
+// Evento click/toque botón ABRIR
 openBtn.addEventListener('click', openMenu);
 
+// Nota: El botón de cerrar ya tiene el onclick="closeMenuManual()" en el HTML.
 </script>
 
 </body>
