@@ -7,7 +7,10 @@
 <style>
 html, body { margin:0; padding:0; height:100%; overflow:hidden; background:black; }
 video#bg-video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0; }
-iframe#pdf-frame { position:absolute; top:0; left:0; width:100%; height:100%; border:none; z-index:2; display:none; }
+
+/* Contenedor del PDF oculto inicialmente */
+embed#pdf-viewer { position:absolute; top:0; left:0; width:100%; height:100%; border:none; z-index:2; display:none; }
+
 button.order-button { position:fixed; bottom:30px; right:30px; padding:45px 70px; font-size:3rem; border:none; border-radius:20px; background-color:rgba(255,255,255,0.9); cursor:pointer; animation:pulse 1.5s infinite; z-index:3; transition:transform 0.3s; }
 button.order-button:hover { transform:scale(1.05); }
 @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.08);} 100%{transform:scale(1);} }
@@ -15,52 +18,45 @@ button.order-button:hover { transform:scale(1.05); }
 </head>
 <body>
 
+<!-- Video corriendo en bucle de fondo -->
 <video id="bg-video" autoplay muted loop playsinline>
   <source src="smoothie-lab-video.mp4" type="video/mp4" />
   Tu navegador no soporta video HTML5.
 </video>
 
-<!-- Iframe con visor integrado para que cargue el PDF solo al hacer clic -->
-<iframe id="pdf-frame" src=""></iframe>
+<!-- Visor de PDF integrado que usa tu archivo directo de GitHub -->
+<embed id="pdf-viewer" src="https://raw.githubusercontent.com/Smoothielab/Web2.0/main/MENU2026.pdf" type="application/pdf">
 
 <button class="order-button" id="order-button">Ver Menu</button>
 
 <script>
-const pdfFrame = document.getElementById('pdf-frame');
+const pdfViewer = document.getElementById('pdf-viewer');
 const orderButton = document.getElementById('order-button');
+const bgVideo = document.getElementById('bg-video');
 
 let inactivityTimer;
 let isFormVisible = false;
 
-// URL de tu PDF en GitHub en formato RAW
-const pdfUrl = "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/MENU2026.pdf";
-
 // --- Abrir PDF ---
 function openForm() {
-    // Asignamos la ruta del PDF al visor de Mozilla solo al hacer clic
-    if (!pdfFrame.src || pdfFrame.src === window.location.href) {
-        pdfFrame.src = "https://mozilla.github.io/pdf.js/web/viewer.html?file=" + encodeURIComponent(pdfUrl);
-    }
-    
-    pdfFrame.style.display = 'block';
-    orderButton.style.display = 'none';
+    pdfViewer.style.display = 'block';   // Muestra el PDF en pantalla completa
+    orderButton.style.display = 'none';  // Oculta el botón de menú
+    bgVideo.pause();                     // Pausa el video para ahorrar recursos mientras se lee
     isFormVisible = true;
     startInactivityTimer();
 }
 
-// --- Cerrar y resetear ---
+// --- Cerrar y resetear (Inactividad o salida) ---
 function closeFormAndReset() {
-    pdfFrame.style.display = 'none';
-    orderButton.style.display = 'block';
+    pdfViewer.style.display = 'none';    // Oculta el visor de PDF
+    orderButton.style.display = 'block'; // Vuelve a mostrar el botón
+    bgVideo.play();                      // Reanuda el video de fondo en bucle
     isFormVisible = false;
 
     clearTimeout(inactivityTimer);
-
-    // Limpia el visor para que el video de fondo siga reproduciéndose libremente
-    pdfFrame.src = '';
 }
 
-// --- Inactividad: 240s ---
+// --- Inactividad: 240s (4 minutos) ---
 function startInactivityTimer() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(() => {
@@ -68,14 +64,14 @@ function startInactivityTimer() {
     }, 240000); 
 }
 
-// --- Resetear inactividad con interacciones ---
+// --- Resetear contador si el usuario toca la pantalla o mueve el mouse ---
 ['mousemove','keydown','scroll','touchstart','click'].forEach(evt => {
     window.addEventListener(evt, () => {
         if (isFormVisible) startInactivityTimer();
     });
 });
 
-// --- Evento Click ---
+// --- Evento Click en el Botón ---
 orderButton.addEventListener('click', openForm);
 </script>
 
