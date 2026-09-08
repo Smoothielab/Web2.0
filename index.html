@@ -7,7 +7,7 @@
 <style>
 html, body { margin:0; padding:0; height:100%; overflow:hidden; background:black; }
 video#bg-video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0; }
-iframe#jotform-frame { position:absolute; top:0; left:0; width:100%; height:100%; border:none; z-index:2; display:none; }
+iframe#pdf-frame { position:absolute; top:0; left:0; width:100%; height:100%; border:none; z-index:2; display:none; }
 button.order-button { position:fixed; bottom:30px; right:30px; padding:45px 70px; font-size:3rem; border:none; border-radius:20px; background-color:rgba(255,255,255,0.9); cursor:pointer; animation:pulse 1.5s infinite; z-index:3; transition:transform 0.3s; }
 button.order-button:hover { transform:scale(1.05); }
 @keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.08);} 100%{transform:scale(1);} }
@@ -20,20 +20,21 @@ button.order-button:hover { transform:scale(1.05); }
   Tu navegador no soporta video HTML5.
 </video>
 
-<iframe id="jotform-frame" src="https://near.tl/sm/J3iL-YDgR"></iframe>
+<!-- PDF integrado con tu usuario, repositorio y nombre de archivo -->
+<iframe id="pdf-frame" src="https://raw.githubusercontent.com/Smoothielab/Web2.0/main/MENU2026.pdf"></iframe>
 
 <button class="order-button" id="order-button">Ver Menu</button>
 
 <script>
-const jotformFrame = document.getElementById('jotform-frame');
+const pdfFrame = document.getElementById('pdf-frame');
 const orderButton = document.getElementById('order-button');
 
 let inactivityTimer;
 let isFormVisible = false;
 
-// --- Abrir formulario ---
+// --- Abrir PDF ---
 function openForm() {
-    jotformFrame.style.display = 'block';
+    pdfFrame.style.display = 'block';
     orderButton.style.display = 'none';
     isFormVisible = true;
     startInactivityTimer();
@@ -41,14 +42,14 @@ function openForm() {
 
 // --- Cerrar y resetear ---
 function closeFormAndReset() {
-    jotformFrame.style.display = 'none';
+    pdfFrame.style.display = 'none';
     orderButton.style.display = 'block';
     isFormVisible = false;
 
     clearTimeout(inactivityTimer);
 
-    // Reinicia el formulario para el próximo usuario
-    jotformFrame.src = jotformFrame.src;
+    // Reinicia el visor del PDF para el próximo usuario
+    pdfFrame.src = pdfFrame.src;
 }
 
 // --- Inactividad: 240s ---
