@@ -3,76 +3,81 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Smoothie Lab - Ver Menú</title>
+<title>Smoothie Lab - Menú</title>
 <style>
-html, body { margin:0; padding:0; height:100%; overflow:hidden; background:black; }
+html, body { margin:0; padding:0; height:100%; overflow:hidden; background:black; font-family: sans-serif; }
 video#bg-video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0; }
 
-/* Contenedor del PDF oculto inicialmente */
-embed#pdf-viewer { position:absolute; top:0; left:0; width:100%; height:100%; border:none; z-index:2; display:none; }
-
-button.order-button { position:fixed; bottom:30px; right:30px; padding:45px 70px; font-size:3rem; border:none; border-radius:20px; background-color:rgba(255,255,255,0.9); cursor:pointer; animation:pulse 1.5s infinite; z-index:3; transition:transform 0.3s; }
-button.order-button:hover { transform:scale(1.05); }
-@keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.08);} 100%{transform:scale(1);} }
+/* Botón grande optimizado para pantalla táctil de la StanbyME */
+button.order-button { 
+    position:fixed; 
+    bottom:40px; 
+    right:40px; 
+    padding:40px 70px; 
+    font-size:3rem; 
+    border:none; 
+    border-radius:25px; 
+    background-color:rgba(255,255,255,0.95); 
+    color: black;
+    font-weight: bold;
+    cursor:pointer; 
+    animation:pulse 1.5s infinite; 
+    z-index:3; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition:transform 0.3s; 
+}
+button.order-button:active { transform:scale(0.95); }
+@keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.06);} 100%{transform:scale(1);} }
 </style>
 </head>
 <body>
 
-<!-- Video corriendo en bucle de fondo -->
+<!-- Video de fondo corriendo en bucle fluido -->
 <video id="bg-video" autoplay muted loop playsinline>
   <source src="smoothie-lab-video.mp4" type="video/mp4" />
   Tu navegador no soporta video HTML5.
 </video>
 
-<!-- Visor de PDF integrado que usa tu archivo directo de GitHub -->
-<embed id="pdf-viewer" src="https://raw.githubusercontent.com/Smoothielab/Web2.0/main/MENU2026.pdf" type="application/pdf">
-
+<!-- Botón táctil para ver el menú -->
 <button class="order-button" id="order-button">Ver Menu</button>
 
 <script>
-const pdfViewer = document.getElementById('pdf-viewer');
 const orderButton = document.getElementById('order-button');
-const bgVideo = document.getElementById('bg-video');
-
 let inactivityTimer;
-let isFormVisible = false;
 
-// --- Abrir PDF ---
-function openForm() {
-    pdfViewer.style.display = 'block';   // Muestra el PDF en pantalla completa
-    orderButton.style.display = 'none';  // Oculta el botón de menú
-    bgVideo.pause();                     // Pausa el video para ahorrar recursos mientras se lee
-    isFormVisible = true;
+// Enlace directo a tu PDF en GitHub
+const pdfUrl = "https://raw.githubusercontent.com/Smoothielab/Web2.0/main/MENU2026.pdf";
+
+// --- Función al hacer click en la StanbyME ---
+function openMenu() {
+    // Abre el PDF en una pestaña nueva del navegador de webOS
+    window.open(pdfUrl, '_blank');
+    
+    // Inicia el temporizador de inactividad de 240 segundos (4 minutos)
     startInactivityTimer();
 }
 
-// --- Cerrar y resetear (Inactividad o salida) ---
-function closeFormAndReset() {
-    pdfViewer.style.display = 'none';    // Oculta el visor de PDF
-    orderButton.style.display = 'block'; // Vuelve a mostrar el botón
-    bgVideo.play();                      // Reanuda el video de fondo en bucle
-    isFormVisible = false;
-
-    clearTimeout(inactivityTimer);
-}
-
-// --- Inactividad: 240s (4 minutos) ---
+// --- Recargar la página para volver al video inicial tras la inactividad ---
 function startInactivityTimer() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(() => {
-        closeFormAndReset();
+        // Recarga la página por completo, lo que mata cualquier pestaña colgada 
+        // y devuelve la StanbyME al video reproduciéndose en bucle.
+        window.location.reload();
     }, 240000); 
 }
 
-// --- Resetear contador si el usuario toca la pantalla o mueve el mouse ---
-['mousemove','keydown','scroll','touchstart','click'].forEach(evt => {
+// --- Reiniciar el conteo si alguien toca la pantalla o interactúa ---
+['mousemove', 'touchstart', 'click', 'keydown'].forEach(evt => {
     window.addEventListener(evt, () => {
-        if (isFormVisible) startInactivityTimer();
+        if (inactivityTimer) {
+            startInactivityTimer();
+        }
     });
 });
 
-// --- Evento Click en el Botón ---
-orderButton.addEventListener('click', openForm);
+// Evento táctil/click principal
+orderButton.addEventListener('click', openMenu);
 </script>
 
 </body>
